@@ -2,9 +2,12 @@
   "name": "watch-looney",
   "author": "twaider",
   "version": "1.0.0",
-  "keywords": ["pebble-app"],
+  "keywords": [
+    "pebble-app"
+  ],
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+  },
   "pebble": {
     "displayName": "watch-looney",
     "uuid": "9358d162-ad10-4297-8ab6-b47d34b06c9f",
@@ -16,6 +19,9 @@
     },
     "resources": {
       "media": []
-    }
+    },
+    "capabilities": [
+      "configurable"
+    ]
   }
 }

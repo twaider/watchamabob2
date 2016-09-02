@@ -1,4 +1,4 @@
-var rocky = require('rocky');
+var rocky = require('rocky'), weather;
 
 function fractionToRadian(fraction) {
   return fraction * 2 * Math.PI;
@@ -27,14 +27,39 @@ function drawHand(ctx, cx, cy, angle, length, color) {
 function drawBackground(ctx, cx, cy) {
   var colors = ['red', 'orange', 'white'], i = 0;
 
-  ctx.fillStyle = 'white';
-  ctx.rockyFillRadial(cx, 10, 0, 12, 0, 2 * Math.PI);
-
   for (; i < colors.length; i++) {
     ctx.fillStyle = colors[i];
-    ctx.rockyFillRadial(cx, cy, 0, (100 - i * 20), 0, 2 * Math.PI);
+    ctx.rockyFillRadial(cx, cy, 0, (96 - i * 20), 0, 2 * Math.PI);
   }
+
+  ctx.fillStyle = 'white';
+  ctx.rockyFillRadial(cx, 28, 0, 8, 0, 2 * Math.PI);
 }
+
+function drawWeather(ctx, weather) {
+  // Create a string describing the weather
+  // var weatherString = weather.celcius + 'ºC, ' + weather.desc;
+  var weatherString = weather.fahrenheit + 'ºF, ' + weather.desc;
+
+  // Draw the text, top center
+  ctx.fillStyle = 'lightgray';
+  ctx.textAlign = 'center';
+  ctx.font = '14px Gothic';
+  ctx.fillText(weatherString, ctx.canvas.unobstructedWidth / 2, 2);
+}
+
+rocky.on('message', function(event) {
+  // Receive a message from the mobile device (pkjs)
+  var message = event.data;
+
+  if (message.weather) {
+    // Save the weather data
+    weather = message.weather;
+
+    // Request a redraw so we see the information
+    rocky.requestDraw();
+  }
+});
 
 rocky.on('draw', function(event) {
   var ctx = event.context;
@@ -61,8 +86,13 @@ rocky.on('draw', function(event) {
 
   drawBackground(ctx, cx, cy);
 
+  // Draw the conditions (before clock hands, so it's drawn underneath them)
+  if (weather) {
+    drawWeather(ctx, weather);
+  }
+
   // Draw the minute hand
-  drawHand(ctx, cx, cy, minuteAngle, maxLength, 'black');
+  drawHand(ctx, cx, cy, minuteAngle, maxLength * 0.85, 'black');
 
   // Calculate the hour hand angle
   var hourFraction = (d.getHours() % 12 + minuteFraction) / 12;
@@ -78,4 +108,9 @@ rocky.on('minutechange', function(event) {
 
   // Request the screen to be redrawn on next pass
   rocky.requestDraw();
+});
+
+rocky.on('hourchange', function(event) {
+  // Send a message to fetch the weather information (on startup and every hour)
+  rocky.postMessage({'fetch': true});
 });
